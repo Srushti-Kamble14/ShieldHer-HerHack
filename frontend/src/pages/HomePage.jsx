@@ -4,6 +4,7 @@ import PersonalDetailsPage from "./PersonalDetailsPage";
 import { useLocation, useNavigate } from "react-router-dom";
 import Gpstracker from "./Gpstracker";
 import RiskAssessmentPanel from "../components/RiskAssessmentPanel";
+import SafetyCenter from "../components/SafetyCenter";
 import home from "../assets/home.jpg";
 import method1 from "../assets/method1.jpg";
 import method2 from "../assets/method2.jpg";
@@ -786,7 +787,7 @@ function Methods() {
       color: "#00cfff",
       glow: "rgba(0,207,255,0.22)",
       border: "rgba(0,207,255,0.38)",
-      title: "Manual App Activation",
+      title: "App SOS Controls",
       image: method1,
 
       icon: (
@@ -813,11 +814,11 @@ function Methods() {
         </svg>
       ),
       steps: [
-        "Open the SOS voice control",
-        "Enable voice listening",
-        "Say HELP to start the SOS",
+        "Open SOS options",
+        "Choose SEND SOS NOW or enable voice",
+        "Allow location access to send SOS",
       ],
-      desc: "With the app open, enable voice listening and say HELP. ShieldHer then attempts to capture a one-time location and sends the initial SOS notification. Live location updates are optional and must be started separately; location history is not stored.",
+      desc: "Open the SOS section and explicitly choose SEND SOS NOW or enable browser voice listening and say HELP. ShieldHer then attempts to capture a one-time location and sends the initial SOS notification. Live location updates are optional and must be started separately; location history is not stored.",
       feat: [
         "User-initiated SOS",
         "One-time location capture",
@@ -1537,25 +1538,30 @@ export default function HomePage() {
         <main style={{ position: "relative", zIndex: 1, overflowX: "hidden" }}>
           <Hero navigate={navigate} />
 
+          <section
+            id="sos-assistance"
+            aria-label="Emergency SOS access"
+            style={{ scrollMarginTop: "80px" }}
+          >
+            <Gpstracker />
+          </section>
+
+          <section
+            aria-label="ShieldHer Safety Center"
+            style={{
+              maxWidth: "1200px",
+              margin: "0 auto",
+              padding: "clamp(24px, 5vw, 56px) clamp(12px, 3vw, 24px)",
+            }}
+          >
+            <SafetyCenter />
+            <RiskAssessmentPanel />
+          </section>
+
           <About />
           <ShieldHerFlipbook />
           <Methods />
         </main>
-
-        <section id="sos-assistance" style={{ scrollMarginTop: "80px" }}>
-          <Gpstracker />
-        </section>
-
-        <section
-          aria-label="ShieldHer Safety Risk Assessment"
-          style={{
-            maxWidth: "1200px",
-            margin: "0 auto",
-            padding: "clamp(24px, 5vw, 56px) clamp(12px, 3vw, 24px)",
-          }}
-        >
-          <RiskAssessmentPanel />
-        </section>
 
         <Footer />
       </div>

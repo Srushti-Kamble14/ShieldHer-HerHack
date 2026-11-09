@@ -1325,6 +1325,8 @@ export default function Dashboard() {
             />
           </div>
 
+
+
           {/* ── Main 3-column grid ── */}
           <div className="main-grid">
             {/* Col 1: Personal Info */}
@@ -1669,8 +1671,6 @@ export default function Dashboard() {
               </div>
             </SCard>
           </div>
-
-          <RiskAssessmentPanel />
 
           {/* ── Trigger Words ── */}
           <div style={{ marginTop: "20px" }}>

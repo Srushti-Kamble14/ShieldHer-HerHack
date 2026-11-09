@@ -1,87 +1,218 @@
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { triggerSOS } from "../services/sosService";
 
+const buttonStyle = {
+  padding: "10px 14px",
+  background: "rgba(0,207,255,0.12)",
+  border: "1px solid rgba(0,207,255,0.42)",
+  borderRadius: 6,
+  color: "#a8f0ff",
+  fontFamily: "'Courier New',monospace",
+  fontSize: 11,
+  letterSpacing: 0.8,
+  cursor: "pointer",
+};
+
 export default function VoiceGPS() {
   const navigate = useNavigate();
-  const [listening, setListening] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [location, setLocation] = useState(null);
+  const [status, setStatus] = useState("ready");
+  const [countdown, setCountdown] = useState(3);
+  const [error, setError] = useState("");
+  const recognitionRef = useRef(null);
+  const countdownRef = useRef(null);
+  const countdownDelayRef = useRef(null);
+  const countdownDeadlineRef = useRef(null);
+  const redirectRef = useRef(null);
+  const sosStartedRef = useRef(false);
+
+  const stopRecognition = () => {
+    recognitionRef.current?.stop();
+    recognitionRef.current = null;
+  };
+
+  const clearCountdown = () => {
+    if (countdownRef.current !== null) {
+      window.clearInterval(countdownRef.current);
+      countdownRef.current = null;
+    }
+    if (countdownDelayRef.current !== null) {
+      window.clearTimeout(countdownDelayRef.current);
+      countdownDelayRef.current = null;
+    }
+  };
+
+  useEffect(
+    () => () => {
+      stopRecognition();
+      clearCountdown();
+      if (redirectRef.current !== null) {
+        window.clearTimeout(redirectRef.current);
+      }
+    },
+    [],
+  );
+
+  const sendSOS = () => {
+    if (sosStartedRef.current) return;
+    sosStartedRef.current = true;
+    clearCountdown();
+    stopRecognition();
+    setError("");
+    setStatus("capturing-location");
+
+    if (!navigator.geolocation) {
+      setError("Location is unavailable in this browser. No SOS request was sent.");
+      setStatus("error");
+      sosStartedRef.current = false;
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        setStatus("sending-sos");
+        try {
+          const result = await triggerSOS(
+            position.coords.latitude,
+            position.coords.longitude,
+          );
+          const contacts = result.contacts?.length
+            ? result.contacts
+            : result.success?.length
+              ? result.success
+              : [];
+          setStatus("sos-sent");
+          redirectRef.current = window.setTimeout(
+            () =>
+              navigate("/sos-confirmation", {
+                state: {
+                  contacts,
+                  lat: position.coords.latitude,
+                  lng: position.coords.longitude,
+                  sharingSessionId: result.sharingSessionId,
+                },
+              }),
+            500,
+          );
+        } catch (requestError) {
+          sosStartedRef.current = false;
+          setError(
+            requestError.message ||
+              "The SOS request failed. No successful response was received.",
+          );
+          setStatus("error");
+        }
+      },
+      (locationError) => {
+        sosStartedRef.current = false;
+        const message =
+          locationError.code === 1
+            ? "Location permission was denied. No SOS request was sent."
+            : locationError.code === 3
+              ? "Location capture timed out. No SOS request was sent."
+              : "Location is unavailable. No SOS request was sent.";
+        setError(message);
+        setStatus("error");
+      },
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 30000 },
+    );
+  };
+
+  const scheduleVoiceSOS = () => {
+    stopRecognition();
+    setStatus("voice-detected");
+    setError("");
+    countdownDelayRef.current = window.setTimeout(() => {
+      countdownDelayRef.current = null;
+      setStatus("preparing-sos");
+      setCountdown(3);
+      countdownDeadlineRef.current = Date.now() + 3000;
+      countdownRef.current = window.setInterval(() => {
+        const remaining = Math.ceil(
+          (countdownDeadlineRef.current - Date.now()) / 1000,
+        );
+        if (remaining <= 0) {
+          clearCountdown();
+          setCountdown(0);
+          sendSOS();
+        } else {
+          setCountdown(remaining);
+        }
+      }, 250);
+    }, 350);
+  };
 
   const startVoice = () => {
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      alert("Voice recognition not supported");
+      setStatus("unsupported");
+      setError("Voice SOS is not supported in this browser. Use the SOS button below.");
       return;
     }
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = true;
+    recognition.continuous = false;
     recognition.lang = "en-US";
+    recognitionRef.current = recognition;
 
-    recognition.onstart = () => setListening(true);
+    recognition.onstart = () => {
+      setError("");
+      setStatus("listening");
+    };
 
     recognition.onresult = (event) => {
       const text = event.results[event.results.length - 1][0].transcript
         .toLowerCase()
         .trim();
-      if (text.includes("help")) {
-        sendSOS();
+      if (text.includes("help") && recognitionRef.current === recognition) {
+        scheduleVoiceSOS();
       }
     };
 
-    recognition.onerror = (e) => {
-      console.error("Voice error:", e.error);
-      setListening(false);
+    recognition.onerror = () => {
+      recognitionRef.current = null;
+      setStatus("error");
+      setError("Browser voice recognition failed. You can use the SOS button below.");
+    };
+    recognition.onend = () => {
+      recognitionRef.current = null;
+      setStatus((current) => (current === "listening" ? "ready" : current));
     };
 
-    recognition.start();
+    try {
+      recognition.start();
+    } catch {
+      recognitionRef.current = null;
+      setStatus("error");
+      setError("Voice listening could not start. Use the SOS button below.");
+    }
   };
 
-  const sendSOS = () => {
-    if (sending) return;
-    setSending(true);
+  const cancelVoiceSOS = () => {
+    clearCountdown();
+    stopRecognition();
+    setStatus("ready");
+    setError("SOS cancelled. No SOS request was sent.");
+  };
 
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-
-        // Show map immediately
-        setLocation({ lat, lng });
-
-        try {
-         const res = await triggerSOS(lat, lng);
-          // ✅ Use res.contacts OR res.success — whichever has data
-          const notifiedContacts = res.contacts?.length
-            ? res.contacts
-            : res.success?.length
-            ? res.success
-            : [];
-
-          setTimeout(() => {
-            navigate("/sos-confirmation", {
-              state: {
-                contacts: notifiedContacts,
-                lat,
-                lng,
-                sharingSessionId: res.sharingSessionId,
-              },
-            });
-          }, 2500);
-        } catch (err) {
-          console.error("SOS failed:", err);
-          setSending(false);
-        }
-      },
-      (err) => {
-        alert("Location error: " + err.message);
-        setSending(false);
-      }
-    );
+  const busy = [
+    "capturing-location",
+    "sending-sos",
+    "sos-sent",
+  ].includes(status);
+  const statusLabels = {
+    ready: "READY",
+    unsupported: "VOICE SOS UNAVAILABLE",
+    listening: "LISTENING",
+    "voice-detected": "VOICE DETECTED",
+    "preparing-sos": `SENDING SOS IN ${countdown} SECONDS`,
+    "capturing-location": "CAPTURING LOCATION",
+    "sending-sos": "SENDING SOS",
+    "sos-sent": "SOS SENT",
+    error: "ERROR",
   };
 
   return (
@@ -121,37 +252,6 @@ export default function VoiceGPS() {
           overflow: "hidden",
         }}
       >
-        {/* Scan line */}
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            height: 1,
-            background:
-              "linear-gradient(90deg,transparent,rgba(0,207,255,.3),transparent)",
-            animation: "scanLine 5s linear infinite",
-            pointerEvents: "none",
-          }}
-        />
-
-        {/* Pulse rings — while sending */}
-        {sending &&
-          [120, 160, 200].map((size, i) => (
-            <div
-              key={i}
-              style={{
-                position: "absolute",
-                width: size,
-                height: size,
-                borderRadius: "50%",
-                border: "1px solid rgba(0,255,136,.25)",
-                animation: `pulseRing 2s ${i * 0.5}s ease-out infinite`,
-                pointerEvents: "none",
-              }}
-            />
-          ))}
-
         <h1
           style={{
             fontFamily: "'Orbitron', monospace",
@@ -162,7 +262,7 @@ export default function VoiceGPS() {
             margin: 0,
           }}
         >
-          VOICE ACTIVATION
+          SOS ASSISTANCE
         </h1>
 
         <p
@@ -174,150 +274,88 @@ export default function VoiceGPS() {
             fontWeight: 500,
           }}
         >
-          Tap ENABLE VOICE, then say{" "}
-          <span style={{ color: "#00cfff" }}>"HELP"</span>. An SOS is sent only
-          after you say HELP and allow location access when prompted.
+          Voice SOS uses browser speech recognition while this page is open. It
+          does not provide background or locked-phone detection. You can enable
+          listening and say <span style={{ color: "#00cfff" }}>HELP</span>, or
+          send an SOS manually below.
         </p>
 
-        {/* Listening indicator */}
-        {listening && !sending && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              animation: "fadeUp .4s both",
-            }}
-          >
-            <div
-              style={{
-                width: 7,
-                height: 7,
-                borderRadius: "50%",
-                background: "#00ff88",
-                boxShadow: "0 0 8px #00ff88",
-                animation: "blink 1s infinite",
-              }}
-            />
-            <span
-              style={{
-                fontFamily: "'Courier New',monospace",
-                fontSize: 11,
-                color: "rgba(0,207,255,.5)",
-                letterSpacing: 2,
-              }}
-            >
-              LISTENING FOR TRIGGER WORD
-            </span>
-          </div>
+        <p
+          role="status"
+          aria-live="polite"
+          style={{
+            color: status === "error" || status === "unsupported" ? "#ffd27d" : "#7de8ff",
+            fontFamily: "'Courier New',monospace",
+            fontSize: 12,
+            letterSpacing: 1,
+          }}
+        >
+          {statusLabels[status]}
+        </p>
+        {error && (
+          <p role="alert" style={{ maxWidth: 420, color: "#ffd27d", fontSize: 13 }}>
+            {error}
+          </p>
         )}
 
-        {/* Sending indicator */}
-        {sending && (
-          <div
-            style={{
-              color: "#ffcc00",
-              fontSize: 13,
-              letterSpacing: 2,
-              fontFamily: "'Orbitron',monospace",
-              animation: "fadeUp .4s both",
-            }}
-          >
-            SENDING SOS...
-          </div>
-        )}
-
-        {/* Enable Voice Button */}
         <button
           onClick={startVoice}
-          disabled={listening}
+          disabled={busy || status === "listening" || status === "preparing-sos"}
           style={{
             padding: "14px 36px",
-            background: listening
+            background: status === "listening"
               ? "rgba(0,255,150,0.1)"
               : "linear-gradient(90deg, rgba(0,100,200,0.4), rgba(0,207,255,0.3))",
-            border: `1px solid ${listening ? "rgba(0,255,150,0.5)" : "rgba(0,207,255,0.6)"}`,
+            border: `1px solid ${status === "listening" ? "rgba(0,255,150,0.5)" : "rgba(0,207,255,0.6)"}`,
             borderRadius: "8px",
             color: "#7de8ff",
             fontSize: "13px",
             letterSpacing: "2px",
             fontFamily: "'Orbitron', monospace",
             fontWeight: 700,
-            cursor: listening ? "default" : "pointer",
-            boxShadow: listening
+            cursor: status === "listening" || busy ? "default" : "pointer",
+            boxShadow: status === "listening"
               ? "0 0 25px rgba(0,255,150,0.3)"
               : "0 0 25px rgba(0,207,255,0.2)",
             transition: "all 0.3s ease",
           }}
         >
-          {listening ? "LISTENING..." : "ENABLE VOICE"}
+          {status === "listening" ? "LISTENING..." : "ENABLE VOICE"}
         </button>
 
-        {/* Expandable Map Box */}
-        <div
+        {status === "preparing-sos" && (
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
+            <p style={{ width: "100%", color: "#ffd5dc", fontSize: 14 }}>
+              Emergency phrase detected. Sending SOS in {countdown} seconds.
+            </p>
+            <button type="button" onClick={cancelVoiceSOS} style={{ ...buttonStyle, borderColor: "#ff8a9e" }}>
+              CANCEL
+            </button>
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={sendSOS}
+          disabled={busy}
           style={{
-            width: location ? "80%" : "0px",
-            height: location ? "45vh" : "0px",
-            opacity: location ? 1 : 0,
-            transition: "all 0.5s cubic-bezier(0.23,1,0.32,1)",
-            border: location ? "1px solid rgba(0,207,255,0.4)" : "none",
-            borderRadius: "10px",
-            overflow: "hidden",
+            ...buttonStyle,
+            padding: "14px 28px",
+            background: "linear-gradient(90deg, #9e1735, #d52d4d)",
+            border: "1px solid #ff8a9e",
+            color: "#fff",
+            opacity: busy ? 0.65 : 1,
+            fontFamily: "'Orbitron', monospace",
+            fontSize: 13,
+            fontWeight: 700,
           }}
         >
-          {location && (
-            <div
-              style={{
-                padding: "6px 14px",
-                background: "rgba(0,20,50,.9)",
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-              }}
-            >
-              <div
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: "50%",
-                  background: "#00ff88",
-                  boxShadow: "0 0 6px #00ff88",
-                  animation: "blink 1.5s infinite",
-                }}
-              />
-              <span
-                style={{
-                  fontFamily: "'Courier New',monospace",
-                  fontSize: 10,
-                  color: "rgba(0,207,255,.5)",
-                  letterSpacing: 2,
-                }}
-              >
-                LOCATION CAPTURED · REDIRECTING...
-              </span>
-              <span
-                style={{
-                  marginLeft: "auto",
-                  fontFamily: "'Courier New',monospace",
-                  fontSize: 10,
-                  color: "rgba(0,255,136,.4)",
-                }}
-              >
-                {location.lat.toFixed(4)}° N, {location.lng.toFixed(4)}° E
-              </span>
-            </div>
-          )}
-
-          {location && (
-            <iframe
-              title="map"
-              width="100%"
-              height="100%"
-              style={{ border: "none", display: "block" }}
-              src={`https://maps.google.com/maps?q=${location.lat},${location.lng}&z=15&output=embed`}
-            />
-          )}
-        </div>
+          {busy ? statusLabels[status] : "SEND SOS NOW"}
+        </button>
+        <p style={{ maxWidth: 420, color: "rgba(168,240,255,.62)", fontSize: 12, lineHeight: 1.5 }}>
+          Starting either SOS option requests a one-time location and sends the
+          initial notification. Live location sharing is separate and always
+          requires an explicit start on the confirmation page.
+        </p>
       </div>
     </div>
   );

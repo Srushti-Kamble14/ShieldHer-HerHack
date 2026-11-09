@@ -1,53 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { assessSafetyRisk } from "../services/riskAssessmentService";
-
-const SAFETY_HISTORY_KEY = "shieldher.safetyActivity.v1";
-const MAX_SAFETY_HISTORY_ENTRIES = 30;
-const RISK_LEVELS = ["LOW", "MODERATE", "HIGH", "CRITICAL"];
-
-const readSafetyHistory = () => {
-  let stored;
-  try {
-    stored = window.localStorage.getItem(SAFETY_HISTORY_KEY);
-  } catch {
-    return { entries: [], available: false };
-  }
-  if (!stored) return { entries: [], available: true };
-
-  let entries;
-  try {
-    entries = JSON.parse(stored);
-  } catch {
-    return { entries: [], available: true };
-  }
-  if (!Array.isArray(entries)) return { entries: [], available: true };
-
-  return {
-    entries: entries
-      .filter(
-        (entry) =>
-          entry &&
-          typeof entry.assessedAt === "string" &&
-          Number.isFinite(Date.parse(entry.assessedAt)) &&
-          Number.isInteger(entry.riskScore) &&
-          entry.riskScore >= 0 &&
-          entry.riskScore <= 100 &&
-          RISK_LEVELS.includes(entry.riskLevel),
-      )
-      .map(({ assessedAt, riskScore, riskLevel }) => ({
-        assessedAt,
-        riskScore,
-        riskLevel,
-      }))
-      .sort(
-        (first, second) =>
-          Date.parse(second.assessedAt) - Date.parse(first.assessedAt),
-      )
-      .slice(0, MAX_SAFETY_HISTORY_ENTRIES),
-    available: true,
-  };
-};
+import {
+  clearSafetyActivity,
+  readSafetyActivity,
+  RISK_LEVELS,
+  SAFETY_ACTIVITY_EVENT,
+  saveSafetyActivity,
+} from "../services/safetyLocalData";
 
 const indicators = [
   ["isolated_area", "The area feels isolated"],
@@ -93,7 +53,7 @@ const inputStyle = {
   fontFamily: "'Courier New',monospace",
 };
 
-export default function RiskAssessmentPanel() {
+export default function RiskAssessmentPanel({ emergencyContacts = [] }) {
   const navigate = useNavigate();
   const [timeOfDay, setTimeOfDay] = useState(timeOfDayForNow);
   const [travellingAlone, setTravellingAlone] = useState(false);
@@ -104,8 +64,15 @@ export default function RiskAssessmentPanel() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [locationNotice, setLocationNotice] = useState("");
-  const [safetyHistory, setSafetyHistory] = useState(readSafetyHistory);
+  const [safetyHistory, setSafetyHistory] = useState(readSafetyActivity);
   const [historyNotice, setHistoryNotice] = useState("");
+
+  useEffect(() => {
+    const refreshHistory = () => setSafetyHistory(readSafetyActivity());
+    window.addEventListener(SAFETY_ACTIVITY_EVENT, refreshHistory);
+    return () =>
+      window.removeEventListener(SAFETY_ACTIVITY_EVENT, refreshHistory);
+  }, []);
 
   const toggleIndicator = (value) => {
     setAdditionalIndicators((current) =>
@@ -140,26 +107,18 @@ export default function RiskAssessmentPanel() {
         additionalIndicators,
       });
       setAssessment(result);
-      const entry = {
+      const saved = saveSafetyActivity({
         assessedAt: result.assessedAt,
         riskScore: result.riskScore,
         riskLevel: result.riskLevel,
-      };
-      const entries = [
-        entry,
-        ...safetyHistory.entries.filter(
-          (savedEntry) => savedEntry.assessedAt !== entry.assessedAt,
-        ),
-      ].slice(0, MAX_SAFETY_HISTORY_ENTRIES);
-      try {
-        window.localStorage.setItem(SAFETY_HISTORY_KEY, JSON.stringify(entries));
-        setSafetyHistory({ entries, available: true });
+      });
+      setSafetyHistory(saved);
+      if (saved.saved) {
         setHistoryNotice("");
-      } catch {
+      } else {
         setHistoryNotice(
           "This assessment could not be saved to local safety history.",
         );
-        setSafetyHistory((current) => ({ ...current, available: false }));
       }
     } catch (requestError) {
       setError(requestError.message || "Safety assessment request failed.");
@@ -177,13 +136,12 @@ export default function RiskAssessmentPanel() {
     fontFamily: "'Courier New',monospace",
   };
   const clearSafetyHistory = () => {
-    try {
-      window.localStorage.removeItem(SAFETY_HISTORY_KEY);
-      setSafetyHistory({ entries: [], available: true });
+    const cleared = clearSafetyActivity();
+    setSafetyHistory(cleared);
+    if (cleared.available) {
       setHistoryNotice("");
-    } catch {
+    } else {
       setHistoryNotice("Safety history could not be cleared on this device.");
-      setSafetyHistory((current) => ({ ...current, available: false }));
     }
   };
   const now = new Date();
@@ -210,6 +168,7 @@ export default function RiskAssessmentPanel() {
 
   return (
     <section
+      id="risk-assessment"
       aria-labelledby="risk-assessment-title"
       style={{
         marginTop: "20px",
@@ -245,9 +204,10 @@ export default function RiskAssessmentPanel() {
         <p style={{ color: "rgba(168,240,255,0.65)", fontSize: "13px" }}>
           How this estimate works: ShieldHer uses a trained local risk model to
           estimate risk from the safety context you provide. It is
-          informational and does not predict or guarantee danger. Model
-          explanation factors reflect learned influences, not proof of
-          causation.
+          informational and does not predict or guarantee danger. This
+          hackathon prototype was trained on synthetic scenarios and has not
+          been validated as a real-world predictive tool. Model explanation
+          factors reflect learned influences, not proof of causation.
         </p>
       </div>
 
@@ -459,7 +419,9 @@ export default function RiskAssessmentPanel() {
               fontFamily: "'Courier New',monospace",
             }}
           >
-            KEY RISK FACTORS
+            {["HIGH", "CRITICAL"].includes(assessment.riskLevel)
+              ? "WHY THIS ASSESSMENT IS ELEVATED"
+              : "KEY RISK FACTORS"}
           </h3>
           {assessment.riskFactors.length > 0 ? (
             <ul
@@ -516,6 +478,17 @@ export default function RiskAssessmentPanel() {
             >
               <h3
                 style={{
+                  margin: "0 0 12px",
+                  color: "#fff",
+                  fontFamily: "'Courier New',monospace",
+                  fontSize: 11,
+                  letterSpacing: 2,
+                }}
+              >
+                SAFETY OPTIONS
+              </h3>
+              <h3
+                style={{
                   margin: "0 0 8px",
                   color: assessment.riskLevel === "CRITICAL" ? "#ffb7c3" : "#b8efff",
                   fontFamily: "'Orbitron',monospace",
@@ -536,7 +509,7 @@ export default function RiskAssessmentPanel() {
                 }}
               >
                 {assessment.riskLevel === "CRITICAL"
-                  ? "If you may be in immediate danger, move toward a populated, well-lit place if possible, and contact local emergency services or someone you trust."
+                  ? "Your reported situation contains several strong safety concerns. If you may be in immediate danger, move toward a populated, well-lit place if possible, and contact local emergency services or someone you trust."
                   : "Consider moving toward a populated, well-lit place and letting someone you trust know how you are."}
               </p>
               <button
@@ -567,8 +540,8 @@ export default function RiskAssessmentPanel() {
                 }}
               >
                 {assessment.riskLevel === "CRITICAL"
-                  ? "OPEN EMERGENCY SOS OPTIONS"
-                  : "OPEN SOS OPTIONS"}
+                  ? "OPEN EMERGENCY SOS"
+                  : "OPEN SOS"}
               </button>
               <p
                 style={{
@@ -579,8 +552,61 @@ export default function RiskAssessmentPanel() {
                 }}
               >
                 This opens the existing SOS screen only; it does not send an
-                SOS. To continue, tap ENABLE VOICE, say “HELP,” and allow
-                location access when prompted.
+                SOS. On that screen, enable voice and say “HELP,” or choose
+                “SEND SOS NOW.” Location access is required.
+              </p>
+              {emergencyContacts.some((contact) => contact.phone) && (
+                <div style={{ marginTop: 12 }}>
+                  <p
+                    style={{
+                      margin: "0 0 8px",
+                      color: "rgba(230,240,255,0.82)",
+                      fontSize: 12,
+                    }}
+                  >
+                    Call a saved trusted contact:
+                  </p>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 8,
+                    }}
+                  >
+                    {emergencyContacts
+                      .filter((contact) => contact.phone)
+                      .map((contact, index) => (
+                        <a
+                          key={`${contact.phone}-${index}`}
+                          href={`tel:${contact.phone}`}
+                          style={{
+                            display: "inline-block",
+                            padding: "8px 10px",
+                            color: "#fff",
+                            background: "rgba(0,20,55,0.65)",
+                            border: "1px solid rgba(0,207,255,0.5)",
+                            borderRadius: 5,
+                            textDecoration: "none",
+                            fontSize: 12,
+                          }}
+                        >
+                          CALL {contact.name || "CONTACT"}
+                        </a>
+                      ))}
+                  </div>
+                </div>
+              )}
+              <p
+                style={{
+                  margin: "10px 0 0",
+                  color: "rgba(230,240,255,0.72)",
+                  fontSize: 12,
+                  lineHeight: 1.5,
+                }}
+              >
+                Live location sharing is separate: it is available after an SOS
+                and starts only if you choose START LIVE SHARING on its
+                confirmation page.
               </p>
             </div>
           )}

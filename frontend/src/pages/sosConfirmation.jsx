@@ -569,7 +569,7 @@ export default function SOSConfirmation() {
             animation: "fadeUp .6s .2s both",
           }}
         >
-          SOS REQUEST COMPLETED
+          SOS NOTIFICATION RESULTS
         </h1>
 
         <p
@@ -581,8 +581,8 @@ export default function SOSConfirmation() {
             animation: "fadeUp .6s .35s both",
           }}
         >
-          Contact results are shown below when returned. Separate call and SMS
-          delivery results are not available.
+          A listed contact had at least one notification method succeed.
+          Separate call and SMS delivery results are not available.
         </p>
 
         <div
@@ -614,7 +614,7 @@ export default function SOSConfirmation() {
               marginBottom: 4,
             }}
           >
-            ◈ CONTACT RESULTS
+            ◈ CONTACTS WITH A SUCCESSFUL NOTIFICATION
           </div>
 
           {calledContacts.length > 0 ? (
@@ -683,7 +683,8 @@ export default function SOSConfirmation() {
                 letterSpacing: 1,
               }}
             >
-              No contact results were included in the SOS response.
+              No contact successes were returned. Emergency notification
+              delivery is not confirmed.
             </p>
           )}
         </div>
