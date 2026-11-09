@@ -729,16 +729,6 @@ export default function SOSConfirmation() {
               >
                 INITIAL SOS LOCATION · ONE-TIME
               </span>
-              <span
-                style={{
-                  marginLeft: "auto",
-                  fontFamily: "'Courier New',monospace",
-                  fontSize: 9,
-                  color: "rgba(0,255,136,.35)",
-                }}
-              >
-                {lat.toFixed(4)}°N, {lng.toFixed(4)}°E
-              </span>
             </div>
             <iframe
               title="sos-map"
@@ -808,10 +798,26 @@ export default function SOSConfirmation() {
               lineHeight: 1.5,
             }}
           >
-            Optional. Choose Start to share location updates with your emergency
-            contacts. Updates are limited to at least 60 seconds and 50 metres
-            of movement. Sharing stops when you stop or leave this page.
+            Optional. The initial SOS request included a one-time location.
+            Choose Start to begin sending live location updates by SMS to your
+            emergency contacts. Updates require at least 60 seconds and 50
+            metres of movement. Sharing stops when you stop or leave this page.
           </p>
+          {sharingStatus === "idle" && (
+            <p
+              role="status"
+              style={{
+                margin: "0 0 10px",
+                color: "rgba(168,240,255,.8)",
+                fontFamily: "'Courier New',monospace",
+                fontSize: 11,
+                letterSpacing: 0.6,
+              }}
+            >
+              INITIAL LOCATION INCLUDED IN SOS REQUEST · LIVE SHARING NOT
+              STARTED
+            </p>
+          )}
           {isSharingActive && (
             <p
               role="status"
@@ -847,7 +853,8 @@ export default function SOSConfirmation() {
               role="status"
               style={{ margin: "0 0 10px", color: "#ffd27d", fontSize: 12 }}
             >
-              Live sharing is unavailable for this SOS session.
+              Initial location was included in the SOS request. Live sharing is
+              unavailable for this session and has not started.
             </p>
           )}
           {sharingStatus === "stopped" && (
@@ -855,15 +862,15 @@ export default function SOSConfirmation() {
               role="status"
               style={{ margin: "0 0 10px", color: "#a8f0ff", fontSize: 12 }}
             >
-              Live location sharing has stopped.
+              LIVE SHARING STOPPED
             </p>
           )}
-          {sharingStatus === "expired" && !sharingMessage && (
+          {sharingStatus === "expired" && (
             <p
               role="status"
               style={{ margin: "0 0 10px", color: "#ffd27d", fontSize: 12 }}
             >
-              This live-sharing session has expired.
+              LIVE SHARING EXPIRED
             </p>
           )}
           {sharingStatus === "stop-error" ? (

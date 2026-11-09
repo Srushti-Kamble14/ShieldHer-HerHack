@@ -902,7 +902,7 @@ function Methods() {
       color: "#5bc8ff",
       glow: "rgba(91,200,255,0.18)",
       border: "rgba(91,200,255,0.32)",
-      title: "Physical Wearable Button",
+      title: "Wearable Integration (Not Available)",
       image: method3,
 
       icon: (
@@ -946,16 +946,16 @@ function Methods() {
         </svg>
       ),
       steps: [
-        "Tap your wearable brooch",
-        "GPS + GSM + Camera on",
-        "Police + contacts notified",
+        "Wearable integration is not available",
+        "No wearable device is connected",
+        "Use the app's available safety tools",
       ],
-      desc: "Tap the elegantly designed wearable brooch — built-in GPS and GSM module activates immediately. Camera captures proof stored on cloud. Emergency contacts and nearby police station are notified simultaneously within seconds.",
+      desc: "This app does not currently connect to a wearable, camera, police dispatch, or cloud evidence-storage service. Use the browser voice SOS and safety risk assessment available in ShieldHer.",
       feat: [
-        "Built-in GPS + GSM module",
-        "Camera captures evidence",
-        "Cloud storage for proof",
-        "Police station auto-alert",
+        "No wearable connection",
+        "No camera evidence capture",
+        "No cloud evidence storage",
+        "No automatic police alert",
       ],
     },
   ];
@@ -989,7 +989,7 @@ function Methods() {
               fontFamily: "'Courier New',monospace",
             }}
           >
-            ◈ THREE LAYERS OF PROTECTION
+            ◈ AVAILABLE SAFETY TOOLS
           </div>
           <h2
             style={{
@@ -1001,7 +1001,7 @@ function Methods() {
               textShadow: "0 0 26px rgba(0,207,255,0.28)",
             }}
           >
-            HOW TO ACTIVATE SHIELDHER
+            HOW TO USE SHIELDHER
           </h2>
           <div
             style={{
@@ -1317,8 +1317,8 @@ function Footer() {
     Product: [
       "Features",
       "How It Works",
-      "Wearable Tech",
-      "Safety AI",
+      "Wearables (not available)",
+      "Safety Risk Assessment",
       "Pricing",
     ],
     Company: ["About Us", "Our Mission", "Press Kit", "Careers", "Blog"],

@@ -1276,7 +1276,7 @@ export default function Dashboard() {
                 }}
                 onClick={() => setShieldActive((a) => !a)}
               >
-                {shieldActive ? "🛡 LOCAL MODE ON" : "⚠ LOCAL MODE OFF"}
+                {shieldActive ? "🛡 DISPLAY TOGGLE ON" : "⚠ DISPLAY TOGGLE OFF"}
               </button>
             </div>
             <div
@@ -1301,9 +1301,9 @@ export default function Dashboard() {
             />
             <StatCard
               icon="🛡"
-              label="Local UI Mode"
+              label="Dashboard Display"
               value={shieldActive ? "ON" : "OFF"}
-              sub="Dashboard-only setting"
+              sub="Visual toggle only"
               color={shieldActive ? "#00cfff" : "#ff4488"}
               delay={80}
             />
@@ -1311,7 +1311,7 @@ export default function Dashboard() {
               icon="👥"
               label="SOS Contacts"
               value={`${contacts.length}/5`}
-              sub="Emergency network"
+              sub="Saved on your profile"
               color="#7de8ff"
               delay={160}
             />
@@ -1508,7 +1508,7 @@ export default function Dashboard() {
             </SCard>
 
             {/* Col 3: Shield Status */}
-            <SCard icon="🛡" title="Local UI Mode" delay={220} accent="#5bc8ff">
+            <SCard icon="🛡" title="Safety Feature Availability" delay={220} accent="#5bc8ff">
               <div
                 style={{
                   display: "flex",
@@ -1531,7 +1531,7 @@ export default function Dashboard() {
                       marginBottom: "6px",
                     }}
                   >
-                    {shieldActive ? "LOCAL MODE ON" : "LOCAL MODE OFF"}
+                    {shieldActive ? "DISPLAY TOGGLE ON" : "DISPLAY TOGGLE OFF"}
                   </div>
                   <div
                     style={{
@@ -1541,7 +1541,7 @@ export default function Dashboard() {
                       fontFamily: "'Courier New',monospace",
                     }}
                   >
-                    This dashboard toggle does not control GPS, risk assessment,
+                    This visual toggle does not control GPS, risk assessment,
                     or SOS.
                   </div>
                 </div>
