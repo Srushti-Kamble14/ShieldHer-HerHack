@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { assessSafetyRisk } from "../services/riskAssessmentService";
 
 const indicators = [
@@ -46,6 +47,7 @@ const inputStyle = {
 };
 
 export default function RiskAssessmentPanel() {
+  const navigate = useNavigate();
   const [timeOfDay, setTimeOfDay] = useState(timeOfDayForNow);
   const [travellingAlone, setTravellingAlone] = useState(false);
   const [situation, setSituation] = useState("walking");
@@ -126,7 +128,7 @@ export default function RiskAssessmentPanel() {
             fontFamily: "'Courier New',monospace",
           }}
         >
-          HERHACK AI TRACK
+          SHIELDHER SAFETY TOOLS
         </div>
         <h2
           id="risk-assessment-title"
@@ -137,10 +139,10 @@ export default function RiskAssessmentPanel() {
             fontSize: "clamp(1rem, 2.5vw, 1.3rem)",
           }}
         >
-          AI Safety Risk Assessment
+          ShieldHer Safety Risk Assessment
         </h2>
         <p style={{ color: "rgba(168,240,255,0.65)", fontSize: "13px" }}>
-          An explainable, rule-based estimate from the context you provide. It
+          A transparent, rule-based estimate from the context you provide. It
           does not replace your judgment or emergency services.
         </p>
       </div>
@@ -324,6 +326,83 @@ export default function RiskAssessmentPanel() {
           <p style={{ color: "#a8f0ff", margin: "12px 0" }}>
             {assessment.recommendation}
           </p>
+          {["HIGH", "CRITICAL"].includes(assessment.riskLevel) && (
+            <div
+              style={{
+                margin: "16px 0",
+                padding: "16px",
+                background:
+                  assessment.riskLevel === "CRITICAL"
+                    ? "rgba(110,16,38,0.42)"
+                    : "rgba(0,100,150,0.2)",
+                border:
+                  assessment.riskLevel === "CRITICAL"
+                    ? "2px solid rgba(255,87,115,0.85)"
+                    : "1px solid rgba(0,207,255,0.5)",
+                borderRadius: "8px",
+                boxShadow:
+                  assessment.riskLevel === "CRITICAL"
+                    ? "0 0 24px rgba(255,45,85,0.24)"
+                    : "0 0 16px rgba(0,180,255,0.12)",
+              }}
+            >
+              <p
+                style={{
+                  margin: "0 0 12px",
+                  color:
+                    assessment.riskLevel === "CRITICAL" ? "#ffd5dc" : "#b8efff",
+                  fontWeight: assessment.riskLevel === "CRITICAL" ? 700 : 500,
+                }}
+              >
+                {assessment.riskLevel === "CRITICAL"
+                  ? "If you are in immediate danger, contact local emergency services. You can also open ShieldHer SOS."
+                  : "Consider contacting your emergency network using ShieldHer SOS."}
+              </p>
+              <button
+                type="button"
+                onClick={() => navigate("/home#sos-assistance")}
+                style={{
+                  width: "100%",
+                  padding: assessment.riskLevel === "CRITICAL" ? "14px 18px" : "12px 16px",
+                  background:
+                    assessment.riskLevel === "CRITICAL"
+                      ? "linear-gradient(90deg, #9e1735, #d52d4d)"
+                      : "linear-gradient(90deg, rgba(0,100,180,0.65), rgba(0,170,210,0.42))",
+                  border:
+                    assessment.riskLevel === "CRITICAL"
+                      ? "2px solid #ff8a9e"
+                      : "1px solid rgba(0,207,255,0.72)",
+                  borderRadius: "6px",
+                  color: "#fff",
+                  fontFamily: "'Orbitron',monospace",
+                  fontSize: assessment.riskLevel === "CRITICAL" ? "0.95rem" : "0.85rem",
+                  fontWeight: 700,
+                  letterSpacing: "1px",
+                  cursor: "pointer",
+                  boxShadow:
+                    assessment.riskLevel === "CRITICAL"
+                      ? "0 0 20px rgba(255,45,85,0.35)"
+                      : "0 0 12px rgba(0,180,255,0.2)",
+                }}
+              >
+                {assessment.riskLevel === "CRITICAL"
+                  ? "OPEN EMERGENCY SOS OPTIONS"
+                  : "OPEN SOS VOICE OPTIONS"}
+              </button>
+              <p
+                style={{
+                  margin: "10px 0 0",
+                  color: "rgba(230,240,255,0.78)",
+                  fontSize: "12px",
+                  lineHeight: 1.5,
+                }}
+              >
+                This only opens the existing SOS screen; it does not send an
+                SOS. There, tap ENABLE VOICE, say “HELP,” and allow location
+                access when prompted.
+              </p>
+            </div>
+          )}
           {assessment.riskFactors.length > 0 ? (
             <ul style={{ color: "rgba(168,240,255,0.7)", paddingLeft: "20px" }}>
               {assessment.riskFactors.map((factor) => (

@@ -177,8 +177,9 @@ export default function VoiceGPS() {
             fontWeight: 500,
           }}
         >
-          Say <span style={{ color: "#00cfff" }}>"HELP"</span> to automatically
-          detect and display your current location on the map.
+          Tap ENABLE VOICE, then say{" "}
+          <span style={{ color: "#00cfff" }}>"HELP"</span>. An SOS is sent only
+          after you say HELP and allow location access when prompted.
         </p>
 
         {/* Listening indicator */}

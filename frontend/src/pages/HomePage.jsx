@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import ShieldHerFlipbook from "./ShieldHerFlipbook";
 import PersonalDetailsPage from "./PersonalDetailsPage";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Gpstracker from "./Gpstracker";
 import home from "../assets/home.jpg";
 import method1 from "../assets/method1.jpg";
@@ -1510,6 +1510,17 @@ function Footer() {
 /* ── Export ──────────────────────────────────────────────────── */
 export default function HomePage() {
   const navigate = useNavigate();
+  const { hash } = useLocation();
+
+  useEffect(() => {
+    if (hash === "#sos-assistance") {
+      document.getElementById("sos-assistance")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [hash]);
+
   return (
     <>
       <style>{CSS}</style>
@@ -1530,7 +1541,9 @@ export default function HomePage() {
           <Methods />
         </main>
 
-        <Gpstracker />
+        <section id="sos-assistance" style={{ scrollMarginTop: "80px" }}>
+          <Gpstracker />
+        </section>
 
         <Footer />
       </div>
