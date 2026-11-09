@@ -1103,12 +1103,20 @@ export default function PersonalDetailsPage() {
             gap: "8px",
           }}
         >
-          <div
+          <button
+            type="button"
+            onClick={() => navigate("/home")}
+            aria-label="Go to Home"
             style={{
               display: "flex",
               alignItems: "center",
               gap: "8px",
               flexShrink: 0,
+              padding: 0,
+              border: 0,
+              background: "transparent",
+              color: "inherit",
+              cursor: "pointer",
             }}
           >
             <div
@@ -1147,7 +1155,7 @@ export default function PersonalDetailsPage() {
             >
               SHIELDHER
             </span>
-          </div>
+          </button>
 
           <span className="nav-title">PROFILE SETUP</span>
 
