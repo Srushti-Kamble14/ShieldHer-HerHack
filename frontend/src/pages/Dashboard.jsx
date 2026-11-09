@@ -3314,7 +3314,6 @@ export default function Dashboard() {
 //                 {[
 //                   ["GPS Signal", "STRONG", "#00cfff"],
 //                   ["AI Engine", "ONLINE", "#00cfff"],
-//                   ["GSM Module", "READY", "#7de8ff"],
 //                   ["Cloud Sync", "ACTIVE", "#5bc8ff"],
 //                   ["Contacts", "NOTIFIED", "#00cfff"],
 //                 ].map(([l, v, c]) => (

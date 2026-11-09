@@ -8,7 +8,6 @@ import SafetyCenter from "../components/SafetyCenter";
 import home from "../assets/home.jpg";
 import method1 from "../assets/method1.jpg";
 import method2 from "../assets/method2.jpg";
-import method3 from "../assets/method3.jpg";
 import { BASE_URL } from "../api/config";
 
 const CSS = `
@@ -897,68 +896,6 @@ function Methods() {
         "User-initiated SOS flow",
       ],
     },
-    {
-      id: "03",
-      tag: "METHOD THREE",
-      color: "#5bc8ff",
-      glow: "rgba(91,200,255,0.18)",
-      border: "rgba(91,200,255,0.32)",
-      title: "Wearable Integration (Not Available)",
-      image: method3,
-
-      icon: (
-        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-          <circle cx="16" cy="16" r="11" stroke="#5bc8ff" strokeWidth="1.5" />
-          <circle
-            cx="16"
-            cy="16"
-            r="7"
-            stroke="rgba(91,200,255,0.4)"
-            strokeWidth="1"
-          />
-          <circle
-            cx="16"
-            cy="16"
-            r="3.5"
-            fill="rgba(91,200,255,0.22)"
-            stroke="#5bc8ff"
-            strokeWidth="1"
-          />
-          <circle cx="16" cy="16" r="1.2" fill="#5bc8ff" />
-          {[0, 45, 90, 135, 180, 225, 270, 315].map((deg, i) => {
-            const rad = (deg * Math.PI) / 180,
-              x1 = 16 + Math.cos(rad) * 8,
-              y1 = 16 + Math.sin(rad) * 8,
-              x2 = 16 + Math.cos(rad) * 10,
-              y2 = 16 + Math.sin(rad) * 10;
-            return (
-              <line
-                key={i}
-                x1={x1}
-                y1={y1}
-                x2={x2}
-                y2={y2}
-                stroke="#5bc8ff"
-                strokeWidth="1"
-                strokeLinecap="round"
-              />
-            );
-          })}
-        </svg>
-      ),
-      steps: [
-        "Wearable integration is not available",
-        "No wearable device is connected",
-        "Use the app's available safety tools",
-      ],
-      desc: "This app does not currently connect to a wearable, camera, police dispatch, or cloud evidence-storage service. Use the browser voice SOS and safety risk assessment available in ShieldHer.",
-      feat: [
-        "No wearable connection",
-        "No camera evidence capture",
-        "No cloud evidence storage",
-        "No automatic police alert",
-      ],
-    },
   ];
 
   return (
@@ -1318,7 +1255,6 @@ function Footer() {
     Product: [
       "Features",
       "How It Works",
-      "Wearables (not available)",
       "Safety Risk Assessment",
       "Pricing",
     ],

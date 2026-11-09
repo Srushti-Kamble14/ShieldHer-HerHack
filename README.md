@@ -2,27 +2,25 @@
 
 ## Overview
 
-**ShieldHer** is a smart AI-powered women safety system that provides instant emergency assistance using voice activation and multi-layered hardware triggering. It is designed to help women quickly alert their emergency contacts and share real-time location during dangerous situations.
+**ShieldHer** is a browser-based safety application that helps users alert their emergency contacts and share their location during dangerous situations.
 
-When a distress trigger is activated (via voice or hardware), the system immediately:
+When a user starts an SOS:
 
-* Sends emergency SMS alerts
-* Makes emergency calls to saved contacts
-* Shares live GPS location
-* Activates hardware-based emergency trigger system
+* Sends an initial emergency notification to saved contacts
+* Captures a one-time location when browser location permission is available
+* Supports optional live location sharing when the user explicitly starts it
 
-This project combines **IoT + AI + Full Stack Development** to build a real-time safety solution.
+This project combines **full-stack development and local risk assessment** to build a safety application.
 
 ---
 
 ## Key Features
 
 * 🎙️ Voice-triggered emergency activation
-* 📍 Real-time GPS location tracking
-* 📞 Automatic emergency calls to contacts
-* 💬 Instant SMS alerts with live location link
-* 🔗 Multi-layer safety activation (software + hardware)
-* ⚡ Fast response using ESP32 microcontroller
+* 📍 Browser-based location capture and opt-in live location sharing
+* 📞 Emergency contact notifications through the backend
+* 💬 Initial SOS notification with a location link when location is available
+* 🛡️ Safety Risk Assessment
 
 ---
 
@@ -37,25 +35,22 @@ This project combines **IoT + AI + Full Stack Development** to build a real-time
 * Express.js
 * MongoDB (Database)
 
-### Hardware / IoT
-* ESP32 microcontroller
-* GPS Module (for live location tracking)
-* GSM Module (for SMS & calling functionality)
+### Browser capabilities
+* Browser geolocation, with user permission
+* Browser speech recognition, where supported
 
 ### Communication
 * Twilio API is integrated in the backend
-* Sends SMS alerts and makes calls via internet
+* Backend uses the configured Twilio service for emergency contact notifications
 
 ---
 
 ## System Architecture
 
-1. User triggers emergency (voice command or hardware button)
-2. ESP32 detects trigger signal
-3. GPS module fetches current location
-4. GSM module sends SMS & makes calls
-5. Backend logs event and manages user/contact data
-6. Frontend dashboard displays user info and emergency status
+1. User explicitly starts SOS in the browser or enables voice listening and says HELP
+2. The browser requests a one-time location when permission is available
+3. The authenticated backend sends the initial notification to emergency contacts
+4. The user can explicitly start optional live location sharing from the confirmation page
 
 ---
 
@@ -79,17 +74,6 @@ Live link 🖇️ - https://shield-her-x2gl.vercel.app
 
 ---
 
-## 🔧 Hardware Setup
-
-- Connect ESP32 with GPS module (UART pins)
-- Connect GSM module for SMS/calling
-- Power supply via battery pack
-- Upload firmware using Arduino IDE
-
-<p align="center">
-  <img src="./images/Hardware.jpeg" width="500"/>
-</p>
-
 ---
 
 ## Project Structure
@@ -102,7 +86,6 @@ ShieldHer/
 ├── models/ (MongoDB Schemas)
 ├── routes/ (API Routes)
 ├── controllers/
-├── hardware/ (ESP32 + GPS + GSM code)
 └── README.md
 ```
 
@@ -147,13 +130,12 @@ TWILIO_PHONE_NUMBER=your_twilio_phone_number
 - AI-based threat detection using audio analysis
 - Mobile app integration
 - Cloud-based real-time tracking dashboard
-- Wearable device version (smart band / pendant)
 
 ---
 
 ## Team / Project
 
-Developed as part of an ELITE_HACKATHON project focused on **Real-Time Smart Safety Systems using IoT + Web Technologies**.
+Developed as part of an ELITE_HACKATHON project focused on **browser-based safety tools and full-stack web technologies**.
 
 ---
 

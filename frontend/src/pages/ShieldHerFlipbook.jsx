@@ -147,7 +147,7 @@ export default function ShieldHerFlipbook() {
         >
           {/* Iframe */}
           <iframe
-            src="https://heyzine.com/flip-book/3d12cf6d45.html"
+            src="https://heyzine.com/flip-book/f75ee9682f.html"
             title="Flipbook"
             style={{
               border: "none",
@@ -168,34 +168,7 @@ export default function ShieldHerFlipbook() {
               pointerEvents: "none",
             }}
           >
-            {/* SHIELDHER BOX */}
-            <div
-              style={{
-                position: "absolute",
-                bottom: "clamp(5px,2%,10px)",
-                left: "clamp(10px,3%,20px)",
-                width: "clamp(140px,30vw,220px)",
-                height: "clamp(50px,10vw,80px)",
-                backgroundColor: "#040d1c",
-                borderRadius: "10px",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-               
-              }}
-            >
-              <h1
-                style={{
-                  margin: 0,
-                  fontSize: "clamp(12px,3vw,22px)",
-                  fontWeight: "bold",
-                  color: "#fff",
-                  letterSpacing: "clamp(1px,1vw,2px)",
-                }}
-              >
-                SHIELDHER ◇
-              </h1>
-            </div>
+           
 
             {/* RIGHT FLOAT BOX */}
             {/* <div
