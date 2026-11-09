@@ -28,8 +28,6 @@ export default function VoiceGPS() {
       const text = event.results[event.results.length - 1][0].transcript
         .toLowerCase()
         .trim();
-      console.log("Heard:", text);
-
       if (text.includes("help")) {
         sendSOS();
       }
@@ -57,8 +55,6 @@ export default function VoiceGPS() {
 
         try {
          const res = await triggerSOS(lat, lng);
-          console.log("SOS Response:", res);
-
           // ✅ Use res.contacts OR res.success — whichever has data
           const notifiedContacts = res.contacts?.length
             ? res.contacts
@@ -72,6 +68,7 @@ export default function VoiceGPS() {
                 contacts: notifiedContacts,
                 lat,
                 lng,
+                sharingSessionId: res.sharingSessionId,
               },
             });
           }, 2500);

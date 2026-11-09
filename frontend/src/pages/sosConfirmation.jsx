@@ -1,6 +1,44 @@
 
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import {
+  sendLiveLocation,
+  startLiveSharing,
+  stopLiveSharing,
+} from "../services/sosService";
 import voice from "../assets/voice.jpg";
+
+const LIVE_UPDATE_MIN_INTERVAL_MS = 60 * 1000;
+const LIVE_UPDATE_MIN_DISTANCE_METERS = 50;
+
+const distanceInMeters = (first, second) => {
+  const radians = (degrees) => (degrees * Math.PI) / 180;
+  const latitudeDelta = radians(second.lat - first.lat);
+  const longitudeDelta = radians(second.lng - first.lng);
+  const firstLatitude = radians(first.lat);
+  const secondLatitude = radians(second.lat);
+  const haversine = Math.min(1,
+    Math.sin(latitudeDelta / 2) ** 2 +
+    Math.cos(firstLatitude) *
+      Math.cos(secondLatitude) *
+      Math.sin(longitudeDelta / 2) ** 2,
+  );
+  return 6371000 * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
+};
+
+const liveSharingButtonStyle = {
+  width: "100%",
+  padding: "12px 16px",
+  background: "linear-gradient(90deg, rgba(0,100,180,.7), rgba(0,170,210,.48))",
+  border: "1px solid rgba(0,207,255,.72)",
+  borderRadius: 6,
+  color: "#fff",
+  fontFamily: "'Orbitron',monospace",
+  fontSize: 12,
+  fontWeight: 700,
+  letterSpacing: 1.2,
+  cursor: "pointer",
+};
 
 /* ─── CSS ────────────────────────────────────────────────────── */
 const CSS = `
@@ -215,11 +253,225 @@ export default function SOSConfirmation() {
 
   const { state } = useLocation();
   const navigate = useNavigate();
+  const sharingSessionId = state?.sharingSessionId;
+  const [sharingStatus, setSharingStatus] = useState("idle");
+  const [sharingMessage, setSharingMessage] = useState("");
+  const [lastSharedAt, setLastSharedAt] = useState(null);
+  const watchIdRef = useRef(null);
+  const expiryTimerRef = useRef(null);
+  const activeSessionRef = useRef(null);
+  const lastSentRef = useRef(null);
+  const lastAttemptRef = useRef(null);
+  const updateInFlightRef = useRef(false);
+  const isSharingRef = useRef(false);
+  const isMountedRef = useRef(true);
 
   // ✅ contacts comes from Gpstracker navigation state
   const calledContacts = state?.contacts || [];
   const lat = state?.lat || 0;
   const lng = state?.lng || 0;
+
+  const clearLocationWatch = useCallback(() => {
+    if (watchIdRef.current !== null && navigator.geolocation) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+    isSharingRef.current = false;
+  }, []);
+
+  const clearExpiryTimer = useCallback(() => {
+    if (expiryTimerRef.current !== null) {
+      window.clearTimeout(expiryTimerRef.current);
+      expiryTimerRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      clearLocationWatch();
+      clearExpiryTimer();
+      const sessionId = activeSessionRef.current;
+      activeSessionRef.current = null;
+      if (sessionId) {
+        stopLiveSharing(sessionId).catch(() => {
+          console.warn("[SOS] Could not confirm live-sharing cleanup.");
+        });
+      }
+    };
+  }, [clearExpiryTimer, clearLocationWatch]);
+
+  const stopSharing = async () => {
+    clearLocationWatch();
+    clearExpiryTimer();
+    const sessionId = activeSessionRef.current;
+    if (!sessionId) {
+      setSharingStatus("stopped");
+      return;
+    }
+
+    setSharingStatus("stopping");
+    setSharingMessage("");
+    try {
+      await stopLiveSharing(sessionId);
+      activeSessionRef.current = null;
+      if (isMountedRef.current) setSharingStatus("stopped");
+    } catch (error) {
+      if (error.status === 404 || error.status === 410) {
+        activeSessionRef.current = null;
+        if (isMountedRef.current) setSharingStatus("expired");
+        return;
+      }
+      if (isMountedRef.current) {
+        setSharingStatus("stop-error");
+        setSharingMessage(
+          "Location tracking has stopped on this device, but server shutdown could not be confirmed. Retry or leave this page; the session expires automatically.",
+        );
+      }
+    }
+  };
+
+  const handleLocationError = (error) => {
+    clearLocationWatch();
+    clearExpiryTimer();
+    if (!isMountedRef.current) return;
+    const message =
+      error.code === 1
+        ? "Location permission was denied. Live sharing has stopped."
+        : error.code === 3
+          ? "Location timed out. Live sharing has stopped."
+          : "Location is unavailable. Live sharing has stopped.";
+    setSharingStatus("error");
+    setSharingMessage(message);
+    const sessionId = activeSessionRef.current;
+    activeSessionRef.current = null;
+    if (sessionId) {
+      stopLiveSharing(sessionId).catch(() => {
+        console.warn("[SOS] Could not confirm live-sharing shutdown.");
+      });
+    }
+  };
+
+  const handleLocation = (position) => {
+    if (!isSharingRef.current || updateInFlightRef.current) return;
+    const current = {
+      lat: position.coords.latitude,
+      lng: position.coords.longitude,
+    };
+    const now = Date.now();
+    const reference = lastSentRef.current || lastAttemptRef.current;
+    if (
+      reference &&
+      (now - lastAttemptRef.current.at < LIVE_UPDATE_MIN_INTERVAL_MS ||
+        distanceInMeters(reference.location, current) <
+          LIVE_UPDATE_MIN_DISTANCE_METERS)
+    ) {
+      return;
+    }
+
+    const sessionId = activeSessionRef.current;
+    if (!sessionId) return;
+    lastAttemptRef.current = { location: current, at: now };
+    updateInFlightRef.current = true;
+    sendLiveLocation(sessionId, current.lat, current.lng)
+      .then((result) => {
+        if (!isMountedRef.current || !isSharingRef.current) return;
+        if (result.sent) {
+          lastSentRef.current = { location: current, at: now };
+          setLastSharedAt(result.updatedAt || new Date().toISOString());
+          setSharingMessage("");
+        }
+      })
+      .catch((error) => {
+        if (!isMountedRef.current || !isSharingRef.current) return;
+        if (error.status === 404 || error.status === 410 || error.status === 409) {
+          clearLocationWatch();
+          clearExpiryTimer();
+          activeSessionRef.current = null;
+          setSharingStatus("expired");
+          setSharingMessage(
+            "The live-sharing session has ended. Start another SOS to share a new location.",
+          );
+          return;
+        }
+        setSharingMessage(
+          "The latest location update could not be confirmed. Sharing remains active and will retry when eligible.",
+        );
+      })
+      .finally(() => {
+        updateInFlightRef.current = false;
+      });
+  };
+
+  const startSharing = async () => {
+    if (!sharingSessionId) {
+      setSharingStatus("error");
+      setSharingMessage(
+        "Live sharing is unavailable for this SOS session. The initial SOS flow is unaffected.",
+      );
+      return;
+    }
+    if (!navigator.geolocation?.watchPosition) {
+      setSharingStatus("error");
+      setSharingMessage("This browser does not support live location sharing.");
+      return;
+    }
+
+    setSharingStatus("starting");
+    setSharingMessage("");
+    try {
+      const session = await startLiveSharing(sharingSessionId);
+      if (!isMountedRef.current) {
+        await stopLiveSharing(sharingSessionId);
+        return;
+      }
+      activeSessionRef.current = sharingSessionId;
+      expiryTimerRef.current = window.setTimeout(() => {
+        clearLocationWatch();
+        clearExpiryTimer();
+        activeSessionRef.current = null;
+        if (isMountedRef.current) {
+          setSharingStatus("expired");
+          setSharingMessage(
+            "The live-sharing session expired. Location tracking has stopped.",
+          );
+        }
+      }, Math.max(0, session.expiresInMs));
+      lastSentRef.current = null;
+      lastAttemptRef.current = null;
+      updateInFlightRef.current = false;
+      isSharingRef.current = true;
+      watchIdRef.current = navigator.geolocation.watchPosition(
+        handleLocation,
+        handleLocationError,
+        { enableHighAccuracy: false, maximumAge: 15000, timeout: 20000 },
+      );
+      setSharingStatus("active");
+    } catch (error) {
+      clearExpiryTimer();
+      clearLocationWatch();
+      if (activeSessionRef.current === sharingSessionId) {
+        activeSessionRef.current = null;
+      }
+      if (error.status !== 404 && error.status !== 410) {
+        stopLiveSharing(sharingSessionId).catch(() => {
+          console.warn("[SOS] Could not confirm live-sharing shutdown.");
+        });
+      }
+      if (isMountedRef.current) {
+        setSharingStatus(error.status === 410 ? "expired" : "error");
+        setSharingMessage(
+          error.status === 410
+            ? "This live-sharing session has expired. Start another SOS to create a new session."
+            : "Could not start live sharing. Check your connection and location permission, then try again.",
+        );
+      }
+    }
+  };
+
+  const isSharingActive = sharingStatus === "active";
+  const isSharingBusy = ["starting", "stopping"].includes(sharingStatus);
 
   return (
     <>
@@ -523,6 +775,168 @@ export default function SOSConfirmation() {
             />
           </div>
         )}
+
+        {/* Opt-in live sharing controls */}
+        <section
+          aria-labelledby="live-sharing-title"
+          style={{
+            width: "100%",
+            maxWidth: 480,
+            marginTop: 12,
+            padding: "18px",
+            textAlign: "left",
+            background: "rgba(0,20,50,.78)",
+            border: `1px solid ${
+              isSharingActive ? "rgba(0,255,136,.5)" : "rgba(0,180,255,.24)"
+            }`,
+            borderRadius: 10,
+            boxShadow: isSharingActive
+              ? "0 0 22px rgba(0,255,136,.12)"
+              : "0 0 18px rgba(0,120,220,.08)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 9,
+              marginBottom: 8,
+            }}
+          >
+            <div
+              aria-hidden="true"
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                background: isSharingActive ? "#00ff88" : "rgba(0,207,255,.5)",
+                boxShadow: isSharingActive ? "0 0 8px #00ff88" : "none",
+              }}
+            />
+            <h2
+              id="live-sharing-title"
+              style={{
+                margin: 0,
+                color: "#7de8ff",
+                fontFamily: "'Orbitron',monospace",
+                fontSize: 13,
+                letterSpacing: 1,
+              }}
+            >
+              LIVE SOS LOCATION SHARING
+            </h2>
+          </div>
+          <p
+            style={{
+              margin: "0 0 12px",
+              color: "rgba(168,240,255,.72)",
+              fontSize: 13,
+              lineHeight: 1.5,
+            }}
+          >
+            Optional. Choose Start to share location updates with your emergency
+            contacts. Updates are limited to at least 60 seconds and 50 metres
+            of movement. Sharing stops when you stop or leave this page.
+          </p>
+          {isSharingActive && (
+            <p
+              role="status"
+              style={{
+                margin: "0 0 10px",
+                color: "#8affc5",
+                fontFamily: "'Courier New',monospace",
+                fontSize: 11,
+                letterSpacing: 1,
+              }}
+            >
+              LIVE SHARING ACTIVE
+              {lastSharedAt
+                ? ` · LAST UPDATE ${new Date(lastSharedAt).toLocaleTimeString()}`
+                : " · WAITING FOR LOCATION"}
+            </p>
+          )}
+          {sharingMessage && (
+            <p
+              role="alert"
+              style={{
+                margin: "0 0 10px",
+                color: "#ffd27d",
+                fontSize: 12,
+                lineHeight: 1.5,
+              }}
+            >
+              {sharingMessage}
+            </p>
+          )}
+          {!sharingSessionId && sharingStatus === "idle" && (
+            <p
+              role="status"
+              style={{ margin: "0 0 10px", color: "#ffd27d", fontSize: 12 }}
+            >
+              Live sharing is unavailable for this SOS session.
+            </p>
+          )}
+          {sharingStatus === "stopped" && (
+            <p
+              role="status"
+              style={{ margin: "0 0 10px", color: "#a8f0ff", fontSize: 12 }}
+            >
+              Live location sharing has stopped.
+            </p>
+          )}
+          {sharingStatus === "expired" && !sharingMessage && (
+            <p
+              role="status"
+              style={{ margin: "0 0 10px", color: "#ffd27d", fontSize: 12 }}
+            >
+              This live-sharing session has expired.
+            </p>
+          )}
+          {sharingStatus === "stop-error" ? (
+            <button
+              type="button"
+              onClick={stopSharing}
+              style={liveSharingButtonStyle}
+            >
+              RETRY STOP
+            </button>
+          ) : isSharingActive ? (
+            <button
+              type="button"
+              onClick={stopSharing}
+              style={{
+                ...liveSharingButtonStyle,
+                background: "rgba(125,20,45,.8)",
+                borderColor: "rgba(255,120,145,.7)",
+              }}
+            >
+              STOP SHARING
+            </button>
+          ) : sharingStatus === "idle" ? (
+            <button
+              type="button"
+              onClick={startSharing}
+              disabled={!sharingSessionId || isSharingBusy}
+              style={{
+                ...liveSharingButtonStyle,
+                opacity: !sharingSessionId || isSharingBusy ? 0.55 : 1,
+                cursor: !sharingSessionId || isSharingBusy ? "not-allowed" : "pointer",
+              }}
+            >
+              {sharingStatus === "starting"
+                ? "STARTING..."
+                : "START LIVE SHARING"}
+            </button>
+          ) : isSharingBusy ? (
+            <button
+              type="button"
+              disabled
+              style={{ ...liveSharingButtonStyle, opacity: 0.6 }}
+            >
+              {sharingStatus === "starting" ? "STARTING..." : "STOPPING..."}
+            </button>
+          ) : null}
+        </section>
 
         {/* Live tracking badge */}
         <div
