@@ -569,7 +569,7 @@ export default function SOSConfirmation() {
             animation: "fadeUp .6s .2s both",
           }}
         >
-          CALLS & SMS SENT SUCCESSFULLY
+          SOS REQUEST COMPLETED
         </h1>
 
         <p
@@ -581,7 +581,8 @@ export default function SOSConfirmation() {
             animation: "fadeUp .6s .35s both",
           }}
         >
-          CALLS + SMS DISPATCHED TO ALL CONTACTS
+          Contact results are shown below when returned. Separate call and SMS
+          delivery results are not available.
         </p>
 
         <div
@@ -613,7 +614,7 @@ export default function SOSConfirmation() {
               marginBottom: 4,
             }}
           >
-            ◈ CONTACTS NOTIFIED
+            ◈ CONTACT RESULTS
           </div>
 
           {calledContacts.length > 0 ? (
@@ -671,32 +672,6 @@ export default function SOSConfirmation() {
                   </div>
                 </div>
 
-                {/* Status badges */}
-                <div style={{ display: "flex", gap: 5 }}>
-                  {["CALL ✓", "SMS ✓"].map((label) => (
-                    <span
-                      key={label}
-                      style={{
-                        fontSize: 9,
-                        padding: "3px 8px",
-                        borderRadius: 4,
-                        background: label.startsWith("CALL")
-                          ? "rgba(0,255,136,.1)"
-                          : "rgba(0,207,255,.1)",
-                        border: `1px solid ${
-                          label.startsWith("CALL")
-                            ? "rgba(0,255,136,.35)"
-                            : "rgba(0,207,255,.35)"
-                        }`,
-                        color: label.startsWith("CALL") ? "#00ff88" : "#00cfff",
-                        fontFamily: "'Courier New',monospace",
-                        letterSpacing: 1.5,
-                      }}
-                    >
-                      {label}
-                    </span>
-                  ))}
-                </div>
               </div>
             ))
           ) : (
@@ -708,7 +683,7 @@ export default function SOSConfirmation() {
                 letterSpacing: 1,
               }}
             >
-              ⚠ NO CONTACTS RETURNED — CHECK SERVER LOGS
+              No contact results were included in the SOS response.
             </p>
           )}
         </div>
@@ -740,9 +715,8 @@ export default function SOSConfirmation() {
                   width: 5,
                   height: 5,
                   borderRadius: "50%",
-                  background: "#00ff88",
-                  boxShadow: "0 0 5px #00ff88",
-                  animation: "blink 1.5s infinite",
+                  background: "#00cfff",
+                  boxShadow: "0 0 5px #00cfff",
                 }}
               />
               <span
@@ -753,7 +727,7 @@ export default function SOSConfirmation() {
                   letterSpacing: 2,
                 }}
               >
-                LOCATION SHARED
+                INITIAL SOS LOCATION · ONE-TIME
               </span>
               <span
                 style={{
@@ -937,37 +911,6 @@ export default function SOSConfirmation() {
             </button>
           ) : null}
         </section>
-
-        {/* Live tracking badge */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            animation: "fadeUp .6s 1.1s both",
-          }}
-        >
-          <div
-            style={{
-              width: 6,
-              height: 6,
-              borderRadius: "50%",
-              background: "#00ff88",
-              boxShadow: "0 0 8px #00ff88",
-              animation: "blink 1.4s ease-in-out infinite",
-            }}
-          />
-          <span
-            style={{
-              fontFamily: "'Courier New',monospace",
-              fontSize: 10,
-              color: "rgba(0,207,255,.4)",
-              letterSpacing: 2,
-            }}
-          >
-            GPS LOCATION SENT · CONTACTS ALERTED
-          </span>
-        </div>
 
         {/* Action buttons */}
         <div

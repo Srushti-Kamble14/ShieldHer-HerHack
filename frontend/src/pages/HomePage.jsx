@@ -345,7 +345,7 @@ function Hero({ navigate }) {
               color: "rgba(0,207,255,0.7)",
             }}
           >
-            AI-POWERED WOMEN SAFETY
+            PERSONAL SAFETY TOOLS
           </span>
         </div>
         <h1
@@ -611,9 +611,9 @@ function About() {
               letterSpacing: "0.3px",
             }}
           >
-            ShieldHer is an AI-powered women safety platform that combines smart
-            hardware, voice recognition, and real-time GPS tracking to create an
-            invisible shield around every woman.
+            ShieldHer brings together browser-based voice recognition, an
+            on-demand safety risk assessment, and an opt-in SOS location-sharing
+            flow.
           </p>
           <p
             style={{
@@ -623,9 +623,9 @@ function About() {
               letterSpacing: "0.3px",
             }}
           >
-            Whether you're commuting late at night, travelling solo, or just
-            need peace of mind — ShieldHer activates in seconds and alerts your
-            emergency network instantly.
+            When you choose to start an SOS, the app requests a one-time
+            location and sends notifications to your configured emergency
+            contacts. Live location updates require a separate opt-in.
           </p>
         </div>
         <div
@@ -813,16 +813,16 @@ function Methods() {
         </svg>
       ),
       steps: [
-        "Open ShieldHer app",
-        "Tap the SOS shield button",
-        "System activates instantly",
+        "Open the SOS voice control",
+        "Enable voice listening",
+        "Say HELP to start the SOS",
       ],
-      desc: "Open the ShieldHer app and tap the shield button. Your live GPS is immediately shared with all emergency contacts via call and SMS. Real-time tracking stays active until you deactivate.",
+      desc: "With the app open, enable voice listening and say HELP. ShieldHer then attempts to capture a one-time location and sends the initial SOS notification. Live location updates are optional and must be started separately; location history is not stored.",
       feat: [
-        "One-tap SOS button",
-        "Live GPS sharing",
-        "Auto call + SMS alert",
-        "Full location history",
+        "User-initiated SOS",
+        "One-time location capture",
+        "Optional live sharing",
+        "No location history",
       ],
     },
     {
@@ -831,7 +831,7 @@ function Methods() {
       color: "#7de8ff",
       glow: "rgba(125,232,255,0.18)",
       border: "rgba(125,232,255,0.32)",
-      title: "Voice Trigger Word",
+      title: "Browser Voice Trigger",
       image: method2,
       icon: (
         <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
@@ -884,16 +884,16 @@ function Methods() {
         </svg>
       ),
       steps: [
-        "Say your personalized word",
-        "AI detects voice instantly",
-        "Hands-free SOS activated",
+        "Keep the app open",
+        "Enable browser voice listening",
+        "Say HELP to start the SOS",
       ],
-      desc: 'Say your personalized trigger word — "Shield", "Help", or any word you set — and ShieldHer\'s AI activates instantly. No need to unlock your phone. Emergency calls and location SMS are sent automatically.',
+      desc: "Voice triggering uses the browser's speech-recognition support while the app is open and listening; it is not an AI voice detector or a locked-phone/background trigger. When HELP is detected, the existing SOS flow attempts a one-time location capture and sends the initial notification.",
       feat: [
-        "AI voice recognition",
-        "Custom trigger word",
-        "Works with locked phone",
-        "Hands-free emergency SOS",
+        "Browser speech recognition",
+        "Requires voice listening to be enabled",
+        "HELP trigger",
+        "User-initiated SOS flow",
       ],
     },
     {
@@ -1404,8 +1404,8 @@ function Footer() {
               letterSpacing: "0.3px",
             }}
           >
-            AI-powered personal safety platform protecting women with real-time
-            alerts, GPS tracking, and wearable technology.
+            Personal safety tools with browser voice recognition, an
+            on-demand risk assessment, and optional SOS location sharing.
           </p>
           <div
             style={{
@@ -1500,7 +1500,7 @@ function Footer() {
               fontFamily: "'Courier New',monospace",
             }}
           >
-            ALL SYSTEMS OPERATIONAL
+            SOS IS USER-INITIATED · LIVE SHARING IS OPTIONAL
           </span>
         </div>
       </div>

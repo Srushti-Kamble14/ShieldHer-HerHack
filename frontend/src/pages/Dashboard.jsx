@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import bg from "../assets/bg.jpg";
 import { Navigate, useNavigate } from "react-router-dom";
 import RiskAssessmentPanel from "../components/RiskAssessmentPanel";
-import { use } from "react";
 
 /* ─── CSS ────────────────────────────────────────────────────── */
 const CSS = `
@@ -315,7 +314,6 @@ function Navbar({ name }) {
               flexShrink: 0,
               background: "#00cfff",
               boxShadow: "0 0 8px #00cfff",
-              animation: "blink 1.5s ease-in-out infinite",
             }}
           />
           <span
@@ -326,7 +324,7 @@ function Navbar({ name }) {
               fontFamily: "'Courier New',monospace",
             }}
           >
-            SHIELD ACTIVE
+            SAFETY TOOLS
           </span>
         </div>
 
@@ -1143,46 +1141,6 @@ export default function Dashboard() {
   const [inputWord, setInputWord] = useState("");
   const [profile, setProfile] = useState(null);
   const [shieldActive, setShieldActive] = useState(true);
-  const [uptime] = useState("04:27:13");
-
-  const navigate = useNavigate();
-
-  const fetchProfile = async () => {
-    try {
-      const token = localStorage.getItem("token");
-
-      if (!token) {
-        navigate("/login");
-        return;
-      }
-
-      const res = await fetch(
-        "https://shieldher-backend-1h8b.onrender.com/api/profile",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      console.log("STATUS:", res.status);
-
-      if (res.status === 200) {
-        const data = await res.json();
-        setProfile(data);
-      } else if (res.status === 404) {
-        navigate("/details");
-      } else if (res.status === 401) {
-        localStorage.removeItem("token");
-        navigate("/login");
-      } else {
-        navigate("/details");
-      }
-    } catch (err) {
-      console.error(err);
-      navigate("/details");
-    }
-  };
 
   // oNLY ONE useEffect (correct place)
   useEffect(() => {
@@ -1291,7 +1249,7 @@ export default function Dashboard() {
                     marginTop: "4px",
                   }}
                 >
-                  YOUR SHIELD IS ACTIVE · ALL SYSTEMS OPERATIONAL
+                  YOUR PROFILE AND SAFETY TOOLS
                 </p>
               </div>
               <button
@@ -1318,7 +1276,7 @@ export default function Dashboard() {
                 }}
                 onClick={() => setShieldActive((a) => !a)}
               >
-                {shieldActive ? "🛡 SHIELD ON" : "⚠ SHIELD OFF"}
+                {shieldActive ? "🛡 LOCAL MODE ON" : "⚠ LOCAL MODE OFF"}
               </button>
             </div>
             <div
@@ -1335,17 +1293,17 @@ export default function Dashboard() {
           <div className="stat-grid">
             <StatCard
               icon="👤"
-              label="Profile Status"
-              value="COMPLETE"
-              sub="All fields filled"
+              label="Profile"
+              value="SAVED"
+              sub="Profile data loaded"
               color="#00cfff"
               delay={0}
             />
             <StatCard
               icon="🛡"
-              label="Shield Status"
-              value={shieldActive ? "ACTIVE" : "OFFLINE"}
-              sub="Real-time protection"
+              label="Local UI Mode"
+              value={shieldActive ? "ON" : "OFF"}
+              sub="Dashboard-only setting"
               color={shieldActive ? "#00cfff" : "#ff4488"}
               delay={80}
             />
@@ -1359,9 +1317,9 @@ export default function Dashboard() {
             />
             <StatCard
               icon="⏱"
-              label="Uptime"
-              value={uptime}
-              sub="Session active"
+              label="Risk Assessment"
+              value="ON DEMAND"
+              sub="Run when you choose"
               color="#5bc8ff"
               delay={240}
             />
@@ -1550,7 +1508,7 @@ export default function Dashboard() {
             </SCard>
 
             {/* Col 3: Shield Status */}
-            <SCard icon="🛡" title="Shield Status" delay={220} accent="#5bc8ff">
+            <SCard icon="🛡" title="Local UI Mode" delay={220} accent="#5bc8ff">
               <div
                 style={{
                   display: "flex",
@@ -1573,7 +1531,7 @@ export default function Dashboard() {
                       marginBottom: "6px",
                     }}
                   >
-                    {shieldActive ? "SHIELD ACTIVE" : "SHIELD OFFLINE"}
+                    {shieldActive ? "LOCAL MODE ON" : "LOCAL MODE OFF"}
                   </div>
                   <div
                     style={{
@@ -1583,9 +1541,8 @@ export default function Dashboard() {
                       fontFamily: "'Courier New',monospace",
                     }}
                   >
-                    {shieldActive
-                      ? "MONITORING · GPS LIVE · AI ON"
-                      : "TAP TO ACTIVATE"}
+                    This dashboard toggle does not control GPS, risk assessment,
+                    or SOS.
                   </div>
                 </div>
               </div>
@@ -1598,11 +1555,11 @@ export default function Dashboard() {
                 }}
               >
                 {[
-                  ["GPS Signal", "STRONG", "#00cfff"],
-                  ["AI Engine", "ONLINE", "#00cfff"],
-                  ["GSM Module", "READY", "#7de8ff"],
-                  ["Cloud Sync", "ACTIVE", "#5bc8ff"],
-                  ["Contacts", "NOTIFIED", "#00cfff"],
+                  ["Location access", "WHEN REQUESTED", "#00cfff"],
+                  ["Risk assessment", "ON DEMAND", "#00cfff"],
+                  ["SOS notifications", "USER-INITIATED", "#7de8ff"],
+                  ["Live location", "OPT-IN", "#5bc8ff"],
+                  ["Emergency contacts", `${contacts.length} SAVED`, "#00cfff"],
                 ].map(([l, v, c]) => (
                   <div
                     key={l}
@@ -1640,7 +1597,6 @@ export default function Dashboard() {
                           borderRadius: "50%",
                           background: c,
                           boxShadow: `0 0 6px ${c}`,
-                          animation: "blink 1.8s ease-in-out infinite",
                         }}
                       />
                       <span
@@ -1705,8 +1661,10 @@ export default function Dashboard() {
                     letterSpacing: ".8px",
                   }}
                 >
-                  ALL {contacts.length} CONTACTS WILL RECEIVE INSTANT CALL + SMS
-                  WITH LIVE GPS WHEN SHIELDHER ACTIVATES
+                  {contacts.length} emergency contact
+                  {contacts.length === 1 ? "" : "s"} saved in your profile.
+                  Notifications are sent only after you explicitly trigger SOS;
+                  live location updates require a separate opt-in.
                 </p>
               </div>
             </SCard>
