@@ -4,6 +4,7 @@ import cors from "cors";
 import authRoutes from "./routes/authRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
 import sosRoutes from "./routes/sosRoutes.js";
+import riskAssessmentRoutes from "./routes/riskAssessmentRoutes.js";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -27,6 +28,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/sos", sosRoutes); 
+app.use("/api/risk-assessment", riskAssessmentRoutes);
 
 
 const PORT = process.env.PORT || 8000;

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import bg from "../assets/bg.jpg";
 import { Navigate, useNavigate } from "react-router-dom";
+import RiskAssessmentPanel from "../components/RiskAssessmentPanel";
 import { use } from "react";
 
 /* ─── CSS ────────────────────────────────────────────────────── */
@@ -1710,6 +1711,8 @@ export default function Dashboard() {
               </div>
             </SCard>
           </div>
+
+          <RiskAssessmentPanel />
 
           {/* ── Trigger Words ── */}
           <div style={{ marginTop: "20px" }}>
