@@ -71,8 +71,10 @@ const INDICATOR_FACTORS = {
   },
 };
 
-const getRiskLevel = (riskScore) =>
+export const getRiskLevel = (riskScore) =>
   RISK_LEVELS.find(({ minimum }) => riskScore >= minimum).level;
+
+export const getRecommendation = (riskLevel) => RECOMMENDATIONS[riskLevel];
 
 // Deterministic weights are additive, mutually exclusive where applicable,
 // and total at most 100. Coordinates are intentionally not used for scoring.
@@ -105,6 +107,6 @@ export const assessRisk = (context) => {
     riskScore,
     riskLevel,
     riskFactors,
-    recommendation: RECOMMENDATIONS[riskLevel],
+    recommendation: getRecommendation(riskLevel),
   };
 };

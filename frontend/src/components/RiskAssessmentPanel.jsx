@@ -142,8 +142,7 @@ export default function RiskAssessmentPanel() {
           ShieldHer Safety Risk Assessment
         </h2>
         <p style={{ color: "rgba(168,240,255,0.65)", fontSize: "13px" }}>
-          A transparent, rule-based estimate from the context you provide. It
-          does not replace your judgment or emergency services.
+         An AI-assisted safety risk estimate based on the context you provide. It does not replace your judgment or emergency services.
         </p>
       </div>
 

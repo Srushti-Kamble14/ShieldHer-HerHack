@@ -3,6 +3,7 @@ import ShieldHerFlipbook from "./ShieldHerFlipbook";
 import PersonalDetailsPage from "./PersonalDetailsPage";
 import { useLocation, useNavigate } from "react-router-dom";
 import Gpstracker from "./Gpstracker";
+import RiskAssessmentPanel from "../components/RiskAssessmentPanel";
 import home from "../assets/home.jpg";
 import method1 from "../assets/method1.jpg";
 import method2 from "../assets/method2.jpg";
@@ -1543,6 +1544,17 @@ export default function HomePage() {
 
         <section id="sos-assistance" style={{ scrollMarginTop: "80px" }}>
           <Gpstracker />
+        </section>
+
+        <section
+          aria-label="ShieldHer Safety Risk Assessment"
+          style={{
+            maxWidth: "1200px",
+            margin: "0 auto",
+            padding: "clamp(24px, 5vw, 56px) clamp(12px, 3vw, 24px)",
+          }}
+        >
+          <RiskAssessmentPanel />
         </section>
 
         <Footer />
