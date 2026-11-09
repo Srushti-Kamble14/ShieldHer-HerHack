@@ -35,13 +35,25 @@ const formatNumber = (num) => {
   return null;
 };
 export const sendSOS = async (req, res) => {
-  const { userId, lat, lng } = req.body;
+  const { lat, lng } = req.body || {};
+  const userId = req.user.id;
 
   console.log("=== SOS TRIGGERED ===");
   console.log("userId:", userId, "lat:", lat, "lng:", lng);
 
-  if (!userId || !lat || !lng) {
-    return res.status(400).json({ msg: "Missing required fields" });
+  if (
+    typeof lat !== "number" ||
+    !Number.isFinite(lat) ||
+    lat < -90 ||
+    lat > 90 ||
+    typeof lng !== "number" ||
+    !Number.isFinite(lng) ||
+    lng < -180 ||
+    lng > 180
+  ) {
+    return res
+      .status(400)
+      .json({ msg: "Valid latitude and longitude are required" });
   }
 
   if (!process.env.TWILIO_NUMBER) {
@@ -95,7 +107,9 @@ export const sendSOS = async (req, res) => {
         //     twiml: `<Response><Say voice="alice">Hello, This is an emergency call. ${senderName} is in danger and needs your help immediately. Her live location has been sent to your phone. Please respond as soon as possible.</Say></Response>`,
         // });
 
-        // 📩 SMS
+        const communicationErrors = [];
+        let communicationSucceeded = false;
+
         try {
           await client.messages.create({
             from: process.env.TWILIO_NUMBER,
@@ -107,21 +121,28 @@ export const sendSOS = async (req, res) => {
             // `📍 Please check the location here:\n${locationLink}`,
             body: `Hi, ${senderName} share her location . Please check  ${locationLink}`,
           });
+          communicationSucceeded = true;
           console.log("✅ SMS sent to", number);
         } catch (err) {
           console.error("❌ SMS failed:", err.message);
+          communicationErrors.push(err.message || "SMS failed");
         }
 
-        // 📞 CALL (always try)
         try {
           await client.calls.create({
             from: process.env.TWILIO_NUMBER,
             to: number,
             twiml: `<Response><Say voice="alice">Hello, This is an emergency call. ${senderName} is in danger and needs your help immediately. Her live location has been sent to your phone. Please respond as soon as possible.</Say></Response>`,
           });
+          communicationSucceeded = true;
           console.log("✅ Call sent to", number);
         } catch (err) {
           console.error("❌ Call failed:", err.message);
+          communicationErrors.push(err.message || "Call failed");
+        }
+
+        if (!communicationSucceeded) {
+          throw new Error(communicationErrors.join("; "));
         }
 
         console.log(`✅ SOS sent to ${contact.name} (${number})`);

@@ -21,7 +21,6 @@ export const triggerSOS = async (lat, lng) => {
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
-      userId,
       name: payload.name || "User",
       lat,  
       lng,
