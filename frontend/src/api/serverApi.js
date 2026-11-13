@@ -1,4 +1,4 @@
-const BASE_URL = "https://shieldher-backend-1h8b.onrender.com/api/auth";
+const BASE_URL = "https://shieldher-herhack-backend.onrender.com/api/auth";
 
 // REGISTER API
 export const registerUser = async (userData) => {
