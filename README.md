@@ -6,6 +6,26 @@ safety planning tools together in one interface.
 
 **Hosted app:** [shield-her-her-hack.vercel.app](https://shield-her-her-hack.vercel.app)
 
+## Website Preview
+
+### Home Page
+
+![ShieldHer home page](images/home.png)
+
+### Login
+
+![ShieldHer sign-in page](images/login.png)
+
+### Safety / Instructions
+
+![ShieldHer instruction manual](images/instructionManual.png)
+
+### SOS Demonstration
+
+![Phone call activity screen](images/Demo_call.jpeg)
+
+![Emergency alert text message with a location link](images/Demo_msg.jpeg)
+
 ## Features
 
 ### SOS and location sharing
