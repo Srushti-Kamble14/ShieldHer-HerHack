@@ -966,7 +966,7 @@ export default function PersonalDetailsPage() {
           return;
         }
         const res = await fetch(
-          "https://shieldher-backend-1h8b.onrender.com/api/profile",
+          "https://shieldher-herhack-backend.onrender.com/api/profile",
           {
             method: "GET",
             headers: {
@@ -1043,7 +1043,7 @@ export default function PersonalDetailsPage() {
 
       const profileData = { personal, contacts: emergencyContacts, address };
       const res = await fetch(
-        "https://shieldher-backend-1h8b.onrender.com/api/profile",
+        "https://shieldher-herhack-backend.onrender.com/api/profile",
         {
           method: isProfileExists ? "PUT" : "POST",
           headers: {

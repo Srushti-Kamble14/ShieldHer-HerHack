@@ -1148,7 +1148,7 @@ export default function Dashboard() {
       try {
         const token = localStorage.getItem("token");
         const res = await fetch(
-          "https://shieldher-backend-1h8b.onrender.com/api/profile",
+          "https://shieldher-herhack-backend.onrender.com/api/profile",
           {
             headers: { Authorization: `Bearer ${token}` },
           },
@@ -2887,7 +2887,7 @@ export default function Dashboard() {
 //       }
 
 //       const res = await fetch(
-//         "https://shieldher-backend-1h8b.onrender.com/api/profile",
+//         "https://shieldher-herhack-backend.onrender.com/api/profile",
 //         {
 //           headers: {
 //             Authorization: `Bearer ${token}`,

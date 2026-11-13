@@ -4,7 +4,7 @@ ShieldHer is a browser-based safety web application. It brings user-initiated
 SOS, optional location sharing, a local risk-assessment model, and personal
 safety planning tools together in one interface.
 
-**Hosted app:** [shield-her-x2gl.vercel.app](https://shield-her-x2gl.vercel.app)
+**Hosted app:** [shield-her-her-hack.vercel.app](https://shield-her-her-hack.vercel.app)
 
 ## Features
 

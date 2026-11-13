@@ -304,7 +304,7 @@
 //   }, []);
 //   const handleLoginCredentialResponse = async (response) => {
 //     console.log("Google token:", response.credential);
-//     const res = await fetch("https://shieldher-backend-1h8b.onrender.com/api/auth/google", {
+//     const res = await fetch("https://shieldher-herhack-backend.onrender.com/api/auth/google", {
 //       method: "POST",
 //       headers: { "Content-Type": "application/json" },
 //       body: JSON.stringify({ token: response.credential }),
@@ -1257,7 +1257,7 @@ function LoginPage({ onSwitch }) {
       console.log("GOOGLE RESPONSE:", response);
     try {
   const res = await fetch(
-    "https://shieldher-backend-1h8b.onrender.com/api/auth/google",
+    "https://shieldher-herhack-backend.onrender.com/api/auth/google",
     {
       method: "POST",
       headers: {
