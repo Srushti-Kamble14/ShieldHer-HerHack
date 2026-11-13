@@ -1,4 +1,4 @@
-const SOS_API_URL = "http://localhost:5000/api/sos";
+const SOS_API_URL = "https://shieldher-herhack-backend.onrender.com/api/sos";
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
