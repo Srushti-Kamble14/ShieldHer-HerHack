@@ -22,9 +22,9 @@ safety planning tools together in one interface.
 
 ### SOS Demonstration
 
-![Phone call activity screen](images/Demo_call.jpeg)
-
-![Emergency alert text message with a location link](images/Demo_msg.jpeg)
+| Phone call activity | Emergency alert text message |
+| --- | --- |
+| ![Phone call activity screen](images/Demo_call.jpeg) | ![Emergency alert text message with a location link](images/Demo_msg.jpeg) |
 
 ## Features
 
